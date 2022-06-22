@@ -1,10 +1,17 @@
-import React from 'react';
+import React, {useEffect} from 'react';
+
 import { useNavigation } from '@react-navigation/native';
+
 import { Alert, KeyboardAvoidingView, Platform } from 'react-native';
+
 import { useForm } from 'react-hook-form';
+
 import { RFValue } from 'react-native-responsive-fontsize';
+
 import * as Yup from 'yup';
+
 import { yupResolver } from '@hookform/resolvers/yup';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import uuid from 'react-native-uuid';
 
@@ -18,7 +25,7 @@ import {
 } from './styles';
 import { StackNavigationProp } from '@react-navigation/stack';
 
-interface FormData {
+export interface FormData {
   service_name: string;
   email: string;
   password: string;
@@ -38,10 +45,11 @@ type RootStackParamList = {
 type NavigationProps = StackNavigationProp<RootStackParamList, 'RegisterLoginData'>;
 
 export function RegisterLoginData() {
-  const { navigate } = useNavigation<NavigationProps>()
+  const  {navigate} = useNavigation<NavigationProps>()
   const {
     control,
     handleSubmit,
+    reset,
     formState: {
       errors
     }
@@ -54,12 +62,31 @@ export function RegisterLoginData() {
       id: String(uuid.v4()),
       ...formData
     }
-
+      
     const dataKey = '@savepass:logins';
-
+    
     // Save data on AsyncStorage and navigate to 'Home' screen
+
+      
+    
+    const response = await AsyncStorage.getItem(dataKey); 
+    const parsedData  = JSON.parse(response!) || []; 
+
+    const newLoginListData = [
+        ...parsedData, 
+        newLoginData
+      ]
+
+      await AsyncStorage.setItem(dataKey, JSON.stringify(newLoginListData)); 
+
+      navigate('Home')
+      reset()  
   }
 
+  
+
+
+ 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -108,7 +135,7 @@ export function RegisterLoginData() {
 
           <Button
             style={{
-              marginTop: RFValue(8)
+              marginTop: RFValue(8)     
             }}
             title="Salvar"
             onPress={handleSubmit(handleRegister)}
